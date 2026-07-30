@@ -1,11 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, Security, status
+﻿from fastapi import APIRouter, Depends, HTTPException, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.schemas import TokenResponse, UserCreate, UserLogin, UserResponse
 from app.services.auth_service import AuthService, build_token_payload, create_access_token, decode_access_token
-
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 auth_service = AuthService()
@@ -36,15 +35,24 @@ def get_current_user(
             detail="Not authenticated",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
     payload = decode_access_token(credentials.credentials)
+
     user_id = payload.get("user_id")
-    user = auth_service.get_user_by_id(db, int(user_id)) if user_id is not None else auth_service.get_user_by_email(db, payload.get("email"))
+
+    user = (
+        auth_service.get_user_by_id(db, int(user_id))
+        if user_id is not None
+        else auth_service.get_user_by_email(db, payload.get("email"))
+    )
+
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
     return user
 
 

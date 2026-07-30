@@ -1,71 +1,112 @@
-from fastapi import HTTPException, status
-from sqlalchemy.orm import Session
-
+from datetime import datetime, timedelta, timezone
 from app.models.job import Job
-from app.models.user import User
+from app.models.search_gap import SearchGap
 from app.schemas import JobCreate, JobUpdate
 
+def fuzzy_terms(text):
+    if not text:
+        return []
+    terms = text.lower().split()
+    expanded = set(terms)
+    synonyms = {
+        "frontend": ["front-end", "front end", "ui", "react", "vue", "angular"],
+        "backend": ["back-end", "back end", "server", "api", "django", "fastapi", "node"],
+        "fullstack": ["full-stack", "full stack", "frontend", "backend"],
+        "ml": ["machine learning", "deep learning", "ai", "artificial intelligence"],
+        "data": ["analytics", "analysis", "scientist", "engineer"],
+        "intern": ["internship", "co-op", "coop", "entry level", "entry-level", "junior"],
+        "swe": ["software engineer", "software developer", "sde"],
+        "dev": ["developer", "engineer"],
+    }
+    for term in terms:
+        if term in synonyms:
+            expanded.update(synonyms[term])
+    return list(expanded)
+
+def log_search_gap(db, query: str, result_count: int, page_size: int):
+    if not query:
+        return
+    if result_count < page_size:
+        existing = db.query(SearchGap).filter(
+            SearchGap.query == query,
+            SearchGap.filled == 0
+        ).first()
+        if not existing:
+            db.add(SearchGap(query=query, result_count=result_count))
+            db.commit()
 
 class JobService:
-    def get_jobs(
-        self,
-        db: Session,
-        limit: int = 50,
-        offset: int = 0,
-        keyword: str | None = None,
-        company: str | None = None,
-        location: str | None = None,
-        sort: str = "newest",
-    ):
+    def get_jobs(self, db, limit=50, offset=0, keyword=None, company=None, location=None, sort="newest", date_range=None, remote_only=False, employment_type=None, current_user=None):
+        from sqlalchemy import or_
         query = db.query(Job)
 
         if keyword:
-            search = f"%{keyword}%"
-            query = query.filter(
-                Job.title.ilike(search)
-                | Job.company.ilike(search)
-                | Job.description.ilike(search)
-            )
+            terms = fuzzy_terms(keyword)
+            conditions = []
+            for term in terms:
+                conditions.append(Job.title.ilike(f"%{term}%"))
+                conditions.append(Job.description.ilike(f"%{term}%"))
+                conditions.append(Job.company.ilike(f"%{term}%"))
+                if Job.ai_tags is not None:
+                    conditions.append(Job.ai_tags.ilike(f"%{term}%"))
+            query = query.filter(or_(*conditions))
 
         if company:
-            query = query.filter(Job.company == company)
+            terms = fuzzy_terms(company)
+            conditions = [Job.company.ilike(f"%{t}%") for t in terms]
+            query = query.filter(or_(*conditions))
 
         if location:
-            query = query.filter(Job.location == location)
+            terms = fuzzy_terms(location)
+            conditions = [Job.location.ilike(f"%{t}%") for t in terms]
+            query = query.filter(or_(*conditions))
 
-        if sort == "oldest":
-            query = query.order_by(Job.created_at.asc(), Job.id.asc())
-        else:
-            query = query.order_by(Job.created_at.desc(), Job.id.desc())
+        if employment_type:
+            query = query.filter(Job.employment_type.ilike("%" + employment_type + "%"))
 
-        return query.offset(offset).limit(limit).all()
+        if remote_only:
+            query = query.filter(Job.location.ilike("%remote%"))
 
-    def get_job(self, db: Session, job_id: int):
-        return db.get(Job, job_id)
+        if date_range:
+            now = datetime.now(timezone.utc)
+            cutoffs = {"today": timedelta(days=1), "week": timedelta(weeks=1), "month": timedelta(days=30)}
+            cutoff = now - cutoffs[date_range] if date_range in cutoffs else None
+            if cutoff:
+                query = query.filter(Job.posted_at >= cutoff)
 
-    def check_job_post_limit(self, db: Session, user: User) -> None:
-        if user.role in {"recruiter", "admin"}:
-            return
-        active_jobs = db.query(Job).filter(Job.user_id == user.id).count()
-        if active_jobs >= 3:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Free plan job limit reached")
+        if sort == "newest":
+            query = query.order_by(Job.posted_at.desc())
+        elif sort == "oldest":
+            query = query.order_by(Job.posted_at.asc())
 
-    def create_job(self, db: Session, job_data: JobCreate, user: User | None = None):
-        if user is not None:
-            self.check_job_post_limit(db, user)
+        results = query.offset(offset).limit(limit).all()
+
+        search_query = " ".join(filter(None, [keyword, company, location]))
+        if search_query:
+            log_search_gap(db, search_query, len(results), limit)
+
+        return results
+
+    def get_jobs_by_user(self, db, user_id, limit=50, offset=0):
+        return db.query(Job).filter(Job.user_id == user_id).order_by(Job.created_at.desc()).offset(offset).limit(limit).all()
+
+    def get_job(self, db, job_id):
+        return db.query(Job).filter(Job.id == job_id).first()
+
+    def create_job(self, db, job_data: JobCreate, current_user):
         job = Job(
-            user_id=user.id if user else None,
             title=job_data.title,
             company=job_data.company,
             location=job_data.location,
             description=job_data.description,
+            user_id=current_user.id,
         )
         db.add(job)
         db.commit()
         db.refresh(job)
         return job
 
-    def update_job(self, db: Session, job: Job, job_data: JobUpdate):
+    def update_job(self, db, job, job_data: JobUpdate):
         job.title = job_data.title
         job.company = job_data.company
         job.location = job_data.location
@@ -74,7 +115,11 @@ class JobService:
         db.refresh(job)
         return job
 
-    def delete_job(self, db: Session, job: Job):
+    def delete_job(self, db, job):
         db.delete(job)
         db.commit()
         return job
+
+
+
+

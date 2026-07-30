@@ -6,16 +6,20 @@ type Props = {
 
 type State = {
   hasError: boolean;
+  error?: Error;
 };
 
 export default class ErrorBoundary extends React.Component<Props, State> {
   state: State = { hasError: false };
 
-  static getDerivedStateFromError() {
-    return { hasError: true };
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
   }
 
-  componentDidCatch() {}
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error("ErrorBoundary caught:", error);
+    console.error("Component stack:", info.componentStack);
+  }
 
   render() {
     if (this.state.hasError) {
@@ -23,7 +27,7 @@ export default class ErrorBoundary extends React.Component<Props, State> {
         <div className="page-shell flex min-h-screen items-center justify-center px-4">
           <div className="card max-w-md p-8 text-center">
             <h1 className="text-2xl font-bold text-slate-900">Something went wrong</h1>
-            <p className="mt-3 text-slate-600">The page crashed while rendering. Please try again.</p>
+            <p className="mt-3 text-slate-600">{this.state.error?.message}</p>
             <button
               className="button-primary mt-6 w-full"
               onClick={() => {
@@ -37,7 +41,6 @@ export default class ErrorBoundary extends React.Component<Props, State> {
         </div>
       );
     }
-
     return this.props.children;
   }
 }

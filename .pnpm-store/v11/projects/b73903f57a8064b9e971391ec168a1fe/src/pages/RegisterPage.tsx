@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Alert from "../components/Alert";
 import Spinner from "../components/Spinner";
-import { useAuth } from "../context/AuthContext";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -10,7 +9,6 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
   const navigate = useNavigate();
 
   return (
@@ -22,13 +20,7 @@ export default function RegisterPage() {
           <Alert type="error" message={error} />
           <Alert type="success" message={success} />
           <input className="input" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-          <input
-            className="input"
-            placeholder="Password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <input className="input" placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
           <button
             className="button-primary w-full"
             disabled={loading}
@@ -36,7 +28,12 @@ export default function RegisterPage() {
               setLoading(true);
               setError("");
               try {
-                await register(email, password);
+                const res = await fetch("http://127.0.0.1:8000/auth/register", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ email, password }),
+                });
+                if (!res.ok) throw new Error("Registration failed");
                 setSuccess("Registration successful. Please log in.");
                 setTimeout(() => navigate("/login"), 700);
               } catch {

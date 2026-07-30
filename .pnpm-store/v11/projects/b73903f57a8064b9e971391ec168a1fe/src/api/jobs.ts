@@ -20,39 +20,37 @@ export type JobCreate = {
 
 export type JobUpdate = JobCreate;
 
-export async function listJobs(params: {
-  limit?: number;
-  offset?: number;
-  keyword?: string;
-  company?: string;
-  location?: string;
-  sort?: "newest" | "oldest";
-}) {
+export async function listJobs(params?: any) {
   const response = await api.get<Job[]>("/jobs", { params });
   return response.data;
 }
 
-export async function getJob(id: number) {
-  const response = await api.get<Job>(`/jobs/${id}`);
+export async function listMyJobs(params?: any) {
+  const response = await api.get<Job[]>("/jobs/mine", { params });
   return response.data;
 }
 
-export async function createJob(payload: JobCreate) {
-  const response = await api.post<Job>("/jobs", payload);
+export async function getJob(id: number) {
+  const response = await api.get<Job>("/jobs/" + id);
+  return response.data;
+}
+
+export async function createJob(job: JobCreate) {
+  const response = await api.post<Job>("/jobs", job);
   return response.data;
 }
 
 export async function updateJob(id: number, payload: JobUpdate) {
-  const response = await api.put<Job>(`/jobs/${id}`, payload);
+  const response = await api.put<Job>("/jobs/" + id, payload);
   return response.data;
 }
 
 export async function deleteJob(id: number) {
-  const response = await api.delete<Job>(`/jobs/${id}`);
+  const response = await api.delete<Job>("/jobs/" + id);
   return response.data;
 }
 
 export async function applyToJob(id: number, resume_text: string) {
-  const response = await api.post(`/jobs/${id}/apply`, { resume_text });
+  const response = await api.post("/jobs/" + id + "/apply", { resume_text });
   return response.data;
 }

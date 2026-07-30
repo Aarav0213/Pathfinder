@@ -12,16 +12,45 @@ export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as { from?: { pathname?: string } } | undefined)?.from?.pathname || "/jobs";
+  const from =
+    (location.state as { from?: { pathname?: string } } | undefined)?.from
+      ?.pathname || "/jobs";
+
+  const handleLogin = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("http://127.0.0.1:8000/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!res.ok) throw new Error("Invalid credentials");
+      const data = await res.json();
+      await login(data.access_token);
+      navigate(from, { replace: true });
+    } catch (err) {
+      setError("Unable to log in. Check your email and password.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="page-shell flex items-center justify-center px-4 py-12">
       <div className="card w-full max-w-md p-8">
         <h1 className="text-3xl font-bold">Welcome back</h1>
-        <p className="mt-2 text-slate-600">Log in to apply for jobs and manage your dashboard.</p>
+        <p className="mt-2 text-slate-600">
+          Log in to apply for jobs and manage your dashboard.
+        </p>
         <div className="mt-6 space-y-4">
           <Alert type="error" message={error} />
-          <input className="input" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <input
+            className="input"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
           <input
             className="input"
             placeholder="Password"
@@ -32,23 +61,15 @@ export default function LoginPage() {
           <button
             className="button-primary w-full"
             disabled={loading}
-            onClick={async () => {
-              setLoading(true);
-              setError("");
-              try {
-                await login(email, password);
-                navigate(from, { replace: true });
-              } catch {
-                setError("Unable to log in. Check your email and password.");
-              } finally {
-                setLoading(false);
-              }
-            }}
+            onClick={handleLogin}
           >
             {loading ? <Spinner /> : "Login"}
           </button>
           <p className="text-sm text-slate-600">
-            New here? <Link className="text-brand-600 hover:underline" to="/register">Create an account</Link>
+            New here?{" "}
+            <Link className="text-brand-600 hover:underline" to="/register">
+              Create an account
+            </Link>
           </p>
         </div>
       </div>
