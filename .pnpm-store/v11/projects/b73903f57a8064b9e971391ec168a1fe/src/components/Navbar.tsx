@@ -1,4 +1,4 @@
-﻿import { NavLink, useNavigate, Link } from "react-router-dom";
+import { NavLink, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useEffect, useRef, useState } from "react";
 import { getNotifications, markAllRead, type Notification } from "../api/notifications";
@@ -174,3 +174,4 @@ export default function Navbar() {
     </header>
   );
 }
+
