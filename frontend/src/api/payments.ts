@@ -1,4 +1,4 @@
-﻿import api from "./client";
+import api from "./client";
 
 export async function createCheckoutSession() {
   const res = await api.post<{ url: string }>("/payments/create-checkout", {
@@ -19,3 +19,4 @@ export async function createPortalSession() {
   const res = await api.post<{ url: string }>("/payments/create-portal");
   return res.data.url;
 }
+

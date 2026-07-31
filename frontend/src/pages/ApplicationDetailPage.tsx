@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { getApplication, type Application } from "../api/applications";
 import { ApplicationsSkeleton } from "../components/Skeletons";
@@ -76,3 +76,4 @@ export default function ApplicationDetailPage() {
     </div>
   );
 }
+

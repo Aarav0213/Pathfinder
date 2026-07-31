@@ -23,3 +23,4 @@ export async function updateApplicationStatus(id: number, status: Application["s
   const response = await api.patch<Application>(`/applications/${id}/status`, { status });
   return response.data;
 }
+

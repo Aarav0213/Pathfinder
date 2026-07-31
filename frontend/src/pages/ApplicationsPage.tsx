@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { listMyApplications, type Application } from "../api/applications";
 import { getApplicationAnalytics, type ApplicationAnalytics } from "../api/analytics";
@@ -102,3 +102,4 @@ export default function ApplicationsPage() {
     </div>
   );
 }
+

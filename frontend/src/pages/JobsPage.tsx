@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Link } from "react-router-dom";
 import { listJobs, type Job } from "../api/jobs";
 import { getRecommendations } from "../api/recommendations";
@@ -272,6 +272,7 @@ export default function JobsPage() {
     </div>
   );
 }
+
 
 
 

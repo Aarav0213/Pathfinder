@@ -14,3 +14,4 @@ export async function getApplicationAnalytics() {
   const res = await api.get<ApplicationAnalytics>("/applications/analytics");
   return res.data;
 }
+

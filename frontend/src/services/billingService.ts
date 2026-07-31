@@ -18,3 +18,4 @@ export function isProUser() {
 export function resetBillingPlan() {
   localStorage.removeItem(PLAN_KEY);
 }
+

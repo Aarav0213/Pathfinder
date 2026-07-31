@@ -54,3 +54,4 @@ export async function applyToJob(id: number, resume_text: string) {
   const response = await api.post("/jobs/" + id + "/apply", { resume_text });
   return response.data;
 }
+

@@ -33,3 +33,4 @@ export async function unsaveJob(job_id: number) {
   const res = await api.delete("/saved/" + job_id);
   return res.data;
 }
+

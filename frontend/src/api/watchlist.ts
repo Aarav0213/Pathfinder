@@ -21,3 +21,4 @@ export async function removeFromWatchlist(id: number) {
   const res = await api.delete("/watchlist/" + id);
   return res.data;
 }
+

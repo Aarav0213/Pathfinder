@@ -5,3 +5,4 @@ export async function getRecommendations() {
   const res = await api.get<Job[]>("/recommendations");
   return res.data;
 }
+

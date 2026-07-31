@@ -21,3 +21,4 @@ export async function markRead(id: number) {
 export async function markAllRead() {
   await api.post("/notifications/read-all");
 }
+

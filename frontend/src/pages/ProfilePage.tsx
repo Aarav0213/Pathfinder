@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getProfile, updateProfile, type UserProfile } from "../api/profile";
 import { useAuth } from "../context/AuthContext";
 import api from "../api/client";
@@ -154,3 +154,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+

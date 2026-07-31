@@ -17,7 +17,7 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType>(null as any);
 
 async function fetchUser(token: string): Promise<User> {
-  const res = await fetch("http://127.0.0.1:8000/auth/me", {
+  const res = await fetch("https://pathfinder-cryd.onrender.com/auth/me", {
     headers: { Authorization: "Bearer " + token },
   });
   if (!res.ok) throw new Error("bad token");
@@ -75,3 +75,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 }
 
 export const useAuth = () => useContext(AuthContext);
+

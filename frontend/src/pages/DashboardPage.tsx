@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createJob, deleteJob, listMyJobs, updateJob, type Job } from "../api/jobs";
 import { useAuth } from "../context/AuthContext";
 import { DashboardSkeleton } from "../components/Skeletons";
@@ -231,3 +231,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

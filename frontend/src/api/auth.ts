@@ -19,3 +19,4 @@ export async function getMe() {
   const response = await api.get<AuthUser>("/auth/me");
   return response.data;
 }
+

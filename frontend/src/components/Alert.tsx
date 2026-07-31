@@ -12,3 +12,4 @@ export default function Alert({
       : "border-emerald-200 bg-emerald-50 text-emerald-700";
   return <div className={`rounded-xl border px-4 py-3 text-sm ${styles}`}>{message}</div>;
 }
+

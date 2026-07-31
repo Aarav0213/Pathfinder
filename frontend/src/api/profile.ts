@@ -21,3 +21,4 @@ export async function updateProfile(data: Partial<UserProfile>) {
   const res = await api.patch<UserProfile>("/users/me", data);
   return res.data;
 }
+
