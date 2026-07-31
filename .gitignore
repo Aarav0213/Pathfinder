@@ -4,3 +4,7 @@
 frontend/.env
 .pnpm-store/
 n.pnpm-store/nfrontend/node_modules/nnode_modules/
+
+node_modules/
+frontend/node_modules/.pnpm-store/
+pnpm-lock.yaml
