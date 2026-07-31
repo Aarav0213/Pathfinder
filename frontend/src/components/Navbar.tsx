@@ -42,7 +42,7 @@ export default function Navbar() {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
 
         <Link to="/jobs" className="flex items-center gap-2.5 shrink-0">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-sm font-bold text-white">P</div>
+          <div className="h-8 w-8 rounded-lg overflow-hidden shrink-0"><img src="/logo.png" alt="Pathfinder" className="h-full w-full object-cover" /></div>
           <span className="font-semibold text-slate-900 hidden sm:block">Pathfinder</span>
         </Link>
 
@@ -174,5 +174,6 @@ export default function Navbar() {
     </header>
   );
 }
+
 
 
