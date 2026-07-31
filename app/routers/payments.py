@@ -1,4 +1,4 @@
-import os
+﻿import os
 import stripe
 import traceback
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -30,8 +30,8 @@ def _meta_get(obj, key, default=None):
 
 
 class CheckoutRequest(BaseModel):
-    success_url: str = "http://localhost:5173/upgrade?success=true"
-    cancel_url: str = "http://localhost:5173/upgrade?canceled=true"
+    success_url: str = "https://pathfinder-eight-ashen.vercel.app/upgrade?success=true"
+    cancel_url: str = "https://pathfinder-eight-ashen.vercel.app/upgrade?canceled=true"
 
 class ConfirmCheckoutRequest(BaseModel):
     session_id: str
@@ -46,15 +46,7 @@ def create_checkout(
         session = stripe.checkout.Session.create(
             payment_method_types=["card"],
             line_items=[{
-                "price_data": {
-                    "currency": "usd",
-                    "unit_amount": 1000,
-                    "recurring": {"interval": "month"},
-                    "product_data": {
-                        "name": "Pathfinder Pro",
-                        "description": "AI cover letters, resume tailoring, company watchlists, and more.",
-                    },
-                },
+                "price": "price_1TzJvcLnZg38XHM1QOzs0Oc1",
                 "quantity": 1,
             }],
             mode="subscription",
@@ -116,7 +108,7 @@ def create_portal(
     try:
         session = stripe.billing_portal.Session.create(
             customer=current_user.stripe_customer_id,
-            return_url="http://localhost:5173/upgrade",
+            return_url="https://pathfinder-eight-ashen.vercel.app/upgrade",
         )
         return {"url": session.url}
     except Exception as e:
