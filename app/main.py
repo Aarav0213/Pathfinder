@@ -70,3 +70,10 @@ async def debug_exception_handler(request: Request, exc: Exception):
     traceback.print_exc()
     print("="*60)
     return JSONResponse(status_code=500, content={"detail": str(exc)})
+
+@app.post("/admin/trigger-pipeline")
+def trigger_pipeline():
+    import threading
+    from app.services.scheduler import run_overnight_pipeline
+    threading.Thread(target=run_overnight_pipeline, daemon=True).start()
+    return {"status": "pipeline started"}
