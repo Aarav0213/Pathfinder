@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+﻿import { Navigate, Route, Routes } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ApplicationsPage from "./pages/ApplicationsPage";
@@ -19,7 +19,7 @@ export default function App() {
     <div className="min-h-full">
       <Navbar />
       <Routes>
-        <Route path="/" element={<Navigate to="/jobs" replace />} />
+        <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/upgrade" element={<UpgradePage />} />
@@ -37,6 +37,7 @@ export default function App() {
     </div>
   );
 }
+
 
 
 
