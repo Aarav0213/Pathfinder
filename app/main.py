@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+﻿from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 load_dotenv()
@@ -50,6 +50,7 @@ def root():
     return {"message": "Pathfinder API"}
 
 @app.get("/health")
+@app.head("/health")
 def health():
     return {"status": "healthy"}
 
