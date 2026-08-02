@@ -1,6 +1,6 @@
 ﻿export default function ContactFooter() {
   return (
-    <footer className="border-t border-slate-200 bg-white">
+    <footer className="bg-transparent">
       <div className="mx-auto flex max-w-7xl items-center justify-center px-4 py-6 sm:px-6 lg:px-8">
         <a
           href="mailto:coolaarav1008@gmail.com"

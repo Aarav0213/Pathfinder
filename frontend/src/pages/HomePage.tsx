@@ -125,8 +125,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-          <ContactFooter />
+      <ContactFooter />
     </main>
   );
 }
+
 
