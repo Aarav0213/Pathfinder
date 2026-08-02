@@ -1,3 +1,4 @@
+﻿import ContactFooter from "../components/ContactFooter";
 import { useEffect, useState, useTransition } from "react";
 import { Link } from "react-router-dom";
 import { listJobs, type Job } from "../api/jobs";
@@ -272,6 +273,7 @@ export default function JobsPage() {
     </div>
   );
 }
+
 
 
 
