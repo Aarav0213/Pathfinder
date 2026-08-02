@@ -7,6 +7,8 @@ import DashboardPage from "./pages/DashboardPage";
 import JobDetailsPage from "./pages/JobDetailsPage";
 import JobsPage from "./pages/JobsPage";
 import HomePage from "./pages/HomePage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
+import TermsPage from "./pages/TermsPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import UpgradePage from "./pages/UpgradePage";
@@ -38,6 +40,7 @@ export default function App() {
     </div>
   );
 }
+
 
 
 
