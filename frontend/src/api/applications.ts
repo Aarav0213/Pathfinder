@@ -1,12 +1,22 @@
-import api from "./client";
+﻿import api from "./client";
 
 export type Application = {
   id: number;
   user_id: number;
   job_id: number;
   resume_text: string;
-  status: "applied" | "reviewing" | "rejected" | "accepted";
+  status: "applied" | "reviewing" | "interview" | "offer" | "rejected" | "accepted";
   created_at: string;
+  job_title?: string;
+  job_company?: string;
+};
+
+export type CustomApplicationPayload = {
+  title: string;
+  company: string;
+  location: string;
+  description: string;
+  apply_url?: string;
 };
 
 export async function listMyApplications() {
@@ -24,3 +34,7 @@ export async function updateApplicationStatus(id: number, status: Application["s
   return response.data;
 }
 
+export async function createCustomApplication(payload: CustomApplicationPayload) {
+  const response = await api.post<Application>("/applications/custom", payload);
+  return response.data;
+}

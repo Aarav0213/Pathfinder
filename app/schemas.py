@@ -1,4 +1,4 @@
-from datetime import datetime
+﻿from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -65,6 +65,12 @@ class ApplicationCreate(BaseModel):
 
 class ApplicationStatusUpdate(BaseModel):
     status: str
+class CustomApplicationCreate(BaseModel):
+    title: str = Field(min_length=2)
+    company: str = Field(min_length=2)
+    location: Optional[str] = "Remote"
+    description: str = Field(min_length=20)
+    apply_url: Optional[str] = None
 
 class ApplicationResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -130,4 +136,5 @@ class RecruiterApplicationResponse(BaseModel):
     created_at: datetime
     job_title: Optional[str] = None
     applicant_email: Optional[str] = None
+
 
