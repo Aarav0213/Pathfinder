@@ -77,3 +77,28 @@ def trigger_pipeline():
     from app.services.scheduler import run_overnight_pipeline
     threading.Thread(target=run_overnight_pipeline, daemon=True).start()
     return {"status": "pipeline started"}
+
+# Temporary protected admin recovery endpoint
+from fastapi import Depends as _Depends, Request as _Request, HTTPException as _HTTPException
+from sqlalchemy.orm import Session as _Session
+from app.database import get_db as _get_db
+from app.models.user import User as _User
+import os as _os
+
+@app.post("/admin/recover-admin")
+def recover_admin(request: _Request, payload: dict, db: _Session = _Depends(_get_db)):
+    if request.headers.get("X-Admin-Secret") != _os.getenv("ADMIN_SECRET"):
+        raise _HTTPException(status_code=403, detail="Forbidden")
+
+    email = payload.get("email")
+    if not email:
+        raise _HTTPException(status_code=400, detail="email is required")
+
+    user = db.query(_User).filter(_User.email == email).first()
+    if not user:
+        raise _HTTPException(status_code=404, detail="User not found")
+
+    user.role = "admin"
+    db.commit()
+
+    return {"ok": True, "email": user.email, "role": user.role}
