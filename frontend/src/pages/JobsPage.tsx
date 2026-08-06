@@ -8,7 +8,6 @@ import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import { useAuth } from "../context/AuthContext";
 
 const PAGE_SIZE = 10;
-
 const companyColors: Record<string, string> = {
   a: "bg-violet-500", b: "bg-blue-500", c: "bg-cyan-500",
   d: "bg-emerald-500", e: "bg-teal-500", f: "bg-indigo-500",
@@ -69,75 +68,61 @@ function JobCard({ job }: { job: Job }) {
   );
 }
 
-export default function JobsPage() {
-  const { user } = useAuth();
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [recommendations, setRecommendations] = useState<Job[]>([]);
-  const [keyword, setKeyword] = useState("");
-  const [company, setCompany] = useState("");
-  const [location, setLocation] = useState("");
-  const [sort, setSort] = useState("newest");
-  const [dateRange, setDateRange] = useState("");
-  const [remoteOnly, setRemoteOnly] = useState(false);
-  const [employmentType, setEmploymentType] = useState("");
-  const [page, setPage] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [sparse, setSparse] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
-  const [, startTransition] = useTransition();
+// ── Lifted OUTSIDE JobsPage so React never remounts it on re-render ──
+type FilterPanelProps = {
+  keyword: string; setKeyword: (v: string) => void;
+  company: string; setCompany: (v: string) => void;
+  location: string; setLocation: (v: string) => void;
+  remoteOnly: boolean; setRemoteOnly: (v: boolean) => void;
+  employmentType: string; setEmploymentType: (v: string) => void;
+  sort: string; setSort: (v: string) => void;
+  dateRange: string; setDateRange: (v: string) => void;
+  hasActiveFilters: boolean;
+  onClear: () => void;
+  startTransition: (fn: () => void) => void;
+};
 
-  const debouncedKeyword = useDebouncedValue(keyword, 350);
-  const debouncedCompany = useDebouncedValue(company, 350);
-  const debouncedLocation = useDebouncedValue(location, 350);
-
-  useEffect(() => {
-    if (user) getRecommendations().then(setRecommendations).catch(() => {});
-  }, [user]);
-
-  useEffect(() => {
-    setPage(0);
-    setSparse(false);
-  }, [debouncedKeyword, debouncedCompany, debouncedLocation, sort, dateRange, remoteOnly, employmentType]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true);
-    const params: Record<string, any> = { limit: PAGE_SIZE, offset: page * PAGE_SIZE, sort };
-    if (debouncedKeyword) params.keyword = debouncedKeyword;
-    if (debouncedCompany) params.company = debouncedCompany;
-    if (debouncedLocation) params.location = debouncedLocation;
-    if (dateRange) params.date_range = dateRange;
-    if (remoteOnly) params.remote_only = true;
-    if (employmentType) params.employment_type = employmentType;
-    listJobs(params)
-      .then((data) => {
-        setJobs(data);
-        setError("");
-        const hasSearch = debouncedKeyword || debouncedCompany || debouncedLocation;
-        setSparse(!!hasSearch && data.length > 0 && data.length < PAGE_SIZE);
-      })
-      .catch((err) => { if (err.name !== "CanceledError") setError("Unable to load jobs right now."); })
-      .finally(() => setLoading(false));
-    return () => controller.abort();
-  }, [debouncedKeyword, debouncedCompany, debouncedLocation, sort, dateRange, remoteOnly, page]);
-
-  const hasActiveFilters = keyword || company || location || dateRange || remoteOnly || employmentType;
-
-  const FilterPanel = () => (
+function FilterPanel({
+  keyword, setKeyword,
+  company, setCompany,
+  location, setLocation,
+  remoteOnly, setRemoteOnly,
+  employmentType, setEmploymentType,
+  sort, setSort,
+  dateRange, setDateRange,
+  hasActiveFilters,
+  onClear,
+  startTransition,
+}: FilterPanelProps) {
+  return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-5">
       <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Filters</div>
       <div className="space-y-1">
         <label className="block text-xs font-medium text-slate-600">Role / Skill</label>
-        <input className="input text-sm py-2" placeholder="e.g. react, ml, backend" value={keyword} onChange={(e) => startTransition(() => setKeyword(e.target.value))} />
+        <input
+          className="input text-sm py-2"
+          placeholder="e.g. react, ml, backend"
+          value={keyword}
+          onChange={(e) => startTransition(() => setKeyword(e.target.value))}
+        />
       </div>
       <div className="space-y-1">
         <label className="block text-xs font-medium text-slate-600">Company</label>
-        <input className="input text-sm py-2" placeholder="e.g. Google, Stripe" value={company} onChange={(e) => startTransition(() => setCompany(e.target.value))} />
+        <input
+          className="input text-sm py-2"
+          placeholder="e.g. Google, Stripe"
+          value={company}
+          onChange={(e) => startTransition(() => setCompany(e.target.value))}
+        />
       </div>
       <div className="space-y-1">
         <label className="block text-xs font-medium text-slate-600">Location</label>
-        <input className="input text-sm py-2" placeholder="e.g. New York, Austin" value={location} onChange={(e) => startTransition(() => setLocation(e.target.value))} />
+        <input
+          className="input text-sm py-2"
+          placeholder="e.g. New York, Austin"
+          value={location}
+          onChange={(e) => startTransition(() => setLocation(e.target.value))}
+        />
       </div>
       <label className="flex items-center gap-3 cursor-pointer">
         <div
@@ -175,24 +160,99 @@ export default function JobsPage() {
         </select>
       </div>
       {hasActiveFilters && (
-        <button className="w-full text-xs font-medium text-slate-500 hover:text-slate-800 py-1 transition" onClick={() => { setKeyword(""); setCompany(""); setLocation(""); setDateRange(""); setSort("newest"); setRemoteOnly(false); setEmploymentType(""); }}>
+        <button
+          className="w-full text-xs font-medium text-slate-500 hover:text-slate-800 py-1 transition"
+          onClick={onClear}
+        >
           Clear all filters
         </button>
       )}
     </div>
   );
+}
+
+export default function JobsPage() {
+  const { user } = useAuth();
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [recommendations, setRecommendations] = useState<Job[]>([]);
+  const [keyword, setKeyword] = useState("");
+  const [company, setCompany] = useState("");
+  const [location, setLocation] = useState("");
+  const [sort, setSort] = useState("newest");
+  const [dateRange, setDateRange] = useState("");
+  const [remoteOnly, setRemoteOnly] = useState(false);
+  const [employmentType, setEmploymentType] = useState("");
+  const [page, setPage] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [sparse, setSparse] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [, startTransition] = useTransition();
+
+  const debouncedKeyword = useDebouncedValue(keyword, 350);
+  const debouncedCompany = useDebouncedValue(company, 350);
+  const debouncedLocation = useDebouncedValue(location, 350);
+
+  const handleClear = () => {
+    setKeyword(""); setCompany(""); setLocation(""); setDateRange("");
+    setSort("newest"); setRemoteOnly(false); setEmploymentType("");
+  };
+
+  useEffect(() => {
+    if (user) getRecommendations().then(setRecommendations).catch(() => {});
+  }, [user]);
+
+  useEffect(() => {
+    setPage(0);
+    setSparse(false);
+  }, [debouncedKeyword, debouncedCompany, debouncedLocation, sort, dateRange, remoteOnly, employmentType]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setLoading(true);
+    const params: Record<string, any> = { limit: PAGE_SIZE, offset: page * PAGE_SIZE, sort };
+    if (debouncedKeyword) params.keyword = debouncedKeyword;
+    if (debouncedCompany) params.company = debouncedCompany;
+    if (debouncedLocation) params.location = debouncedLocation;
+    if (dateRange) params.date_range = dateRange;
+    if (remoteOnly) params.remote_only = true;
+    if (employmentType) params.employment_type = employmentType;
+    listJobs(params)
+      .then((data) => {
+        setJobs(data);
+        setError("");
+        const hasSearch = debouncedKeyword || debouncedCompany || debouncedLocation;
+        setSparse(!!hasSearch && data.length > 0 && data.length < PAGE_SIZE);
+      })
+      .catch((err) => { if (err.name !== "CanceledError") setError("Unable to load jobs right now."); })
+      .finally(() => setLoading(false));
+    return () => controller.abort();
+  }, [debouncedKeyword, debouncedCompany, debouncedLocation, sort, dateRange, remoteOnly, page]);
+
+  const hasActiveFilters = !!(keyword || company || location || dateRange || remoteOnly || employmentType);
+
+  const filterProps: FilterPanelProps = {
+    keyword, setKeyword,
+    company, setCompany,
+    location, setLocation,
+    remoteOnly, setRemoteOnly,
+    employmentType, setEmploymentType,
+    sort, setSort,
+    dateRange, setDateRange,
+    hasActiveFilters,
+    onClear: handleClear,
+    startTransition,
+  };
 
   return (
     <div className="page-shell">
       <div className="mx-auto max-w-7xl px-4 py-8 pb-12 sm:px-6 lg:px-8">
-
         <div className="mb-8 rounded-3xl bg-slate-900 px-8 py-12 text-white">
           <div className="max-w-2xl">
             <h1 className="text-4xl font-bold tracking-tight leading-tight">Find your next internship</h1>
             <p className="mt-3 text-base text-slate-400 max-w-lg">Search thousands of real listings from top companies. Filter, sort, and apply in minutes.</p>
           </div>
         </div>
-
         {user && recommendations.length > 0 && !hasActiveFilters && (
           <div className="mb-8">
             <div className="flex items-center justify-between mb-3">
@@ -215,14 +275,11 @@ export default function JobsPage() {
             </div>
           </div>
         )}
-
         <div className="flex gap-6 items-start">
           <aside className="hidden lg:block w-56 shrink-0">
-            <FilterPanel />
+            <FilterPanel {...filterProps} />
           </aside>
-
           <div className="flex-1 min-w-0 space-y-3">
-
             <div className="lg:hidden">
               <button
                 className="w-full flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 shadow-sm"
@@ -240,18 +297,16 @@ export default function JobsPage() {
               </button>
               {showFilters && (
                 <div className="mt-2">
-                  <FilterPanel />
+                  <FilterPanel {...filterProps} />
                 </div>
               )}
             </div>
-
             {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
             {sparse && (
               <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
                 Limited results found. We have logged your search and will pull more listings overnight.
               </div>
             )}
-
             {loading ? <JobListSkeleton /> : jobs.length === 0 ? (
               <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-sm">
                 <div className="text-slate-700 font-medium">No results found</div>
@@ -260,25 +315,14 @@ export default function JobsPage() {
             ) : (
               jobs.map((job) => <JobCard key={job.id} job={job} />)
             )}
-
             <div className="flex items-center justify-center gap-3 pt-2">
               <button className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition" disabled={page === 0 || loading} onClick={() => setPage((p) => Math.max(0, p - 1))}>Previous</button>
               <span className="text-sm text-slate-500 font-medium">Page {page + 1}</span>
               <button className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition" disabled={jobs.length < PAGE_SIZE || loading} onClick={() => setPage((p) => p + 1)}>Next</button>
             </div>
-
           </div>
         </div>
       </div>
     </div>
   );
 }
-
-
-
-
-
-
-
-
-

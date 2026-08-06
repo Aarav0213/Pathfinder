@@ -37,13 +37,14 @@ export default function ProfilePage() {
     setMessage("");
     setError("");
     try {
-      await updateProfile({
+      const updated = await updateProfile({
         resume_text: form.resume_text || undefined,
         skills: form.skills || undefined,
         target_roles: form.target_roles || undefined,
         preferred_locations: form.preferred_locations || undefined,
-        graduation_year: form.graduation_year ? Number(form.graduation_year) : undefined,
+        graduation_year: form.graduation_year !== "" ? Number(form.graduation_year) : undefined,
       });
+      setProfile(updated);
       setMessage("Profile saved.");
     } catch {
       setError("Unable to save profile.");
