@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { createCheckoutSession, createPortalSession, confirmCheckoutSession } from "../api/payments";
@@ -15,6 +15,7 @@ export default function UpgradePage() {
   const success = searchParams.get("success") === "true";
   const canceled = searchParams.get("canceled") === "true";
   const sessionId = searchParams.get("session_id");
+
   const isPremium = Boolean((user as any)?.is_premium);
 
   useEffect(() => {
@@ -60,6 +61,19 @@ export default function UpgradePage() {
     }
   };
 
+  const handleDowngrade = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      await api.post("/users/me/downgrade");
+      await login(token!);
+    } catch {
+      setError("Unable to switch to Free. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="page-shell">
       <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8 space-y-8">
@@ -78,12 +92,10 @@ export default function UpgradePage() {
             {error}
           </div>
         )}
-
         <div>
           <h1 className="text-4xl font-bold text-slate-900 text-center">Upgrade to Pro</h1>
           <p className="mt-3 text-lg text-slate-500 text-center">Everything you need to land your internship faster.</p>
         </div>
-
         <div className="card p-8 space-y-6">
           <div className="grid gap-4 sm:grid-cols-2">
             {[
@@ -103,7 +115,6 @@ export default function UpgradePage() {
               </div>
             ))}
           </div>
-
           <div className="border-t border-slate-200 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
               <div className="flex items-baseline gap-2">
@@ -112,38 +123,16 @@ export default function UpgradePage() {
               </div>
               <div className="text-sm text-slate-500 mt-1">Cancel anytime. No commitment.</div>
             </div>
-
-            const handleDowngrade = async () => {
-              setLoading(true);
-              setError("");
-              try {
-                await api.post("/users/me/downgrade");
-                await login(token!); // re-fetch user from /auth/me so is_premium updates in context
-              } catch {
-                setError("Unable to switch to Free. Please try again.");
-              } finally {
-                setLoading(false);
-              }
-            };
-
             {isPremium || confirmed ? (
               <div className="flex flex-col items-end gap-2">
                 <div className="badge bg-brand-100 text-brand-700 text-base px-6 py-3 flex items-center gap-2">
                   <span className="inline-block w-2 h-2 rounded-full bg-brand-500"></span>
                   You are on Pro
                 </div>
-                <button
-                  className="text-sm text-slate-500 hover:text-slate-800 underline"
-                  onClick={handleManage}
-                  disabled={loading}
-                >
+                <button className="text-sm text-slate-500 hover:text-slate-800 underline" onClick={handleManage} disabled={loading}>
                   Manage subscription
                 </button>
-                <button
-                  className="text-sm text-red-400 hover:text-red-600 underline"
-                  onClick={handleDowngrade}
-                  disabled={loading}
-                >
+                <button className="text-sm text-red-400 hover:text-red-600 underline" onClick={handleDowngrade} disabled={loading}>
                   Switch to Free
                 </button>
               </div>

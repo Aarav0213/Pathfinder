@@ -68,7 +68,6 @@ function JobCard({ job }: { job: Job }) {
   );
 }
 
-// ── Lifted OUTSIDE JobsPage so React never remounts it on re-render ──
 type FilterPanelProps = {
   keyword: string; setKeyword: (v: string) => void;
   company: string; setCompany: (v: string) => void;
@@ -99,30 +98,15 @@ function FilterPanel({
       <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Filters</div>
       <div className="space-y-1">
         <label className="block text-xs font-medium text-slate-600">Role / Skill</label>
-        <input
-          className="input text-sm py-2"
-          placeholder="e.g. react, ml, backend"
-          value={keyword}
-          onChange={(e) => startTransition(() => setKeyword(e.target.value))}
-        />
+        <input className="input text-sm py-2" placeholder="e.g. react, ml, backend" value={keyword} onChange={(e) => startTransition(() => setKeyword(e.target.value))} />
       </div>
       <div className="space-y-1">
         <label className="block text-xs font-medium text-slate-600">Company</label>
-        <input
-          className="input text-sm py-2"
-          placeholder="e.g. Google, Stripe"
-          value={company}
-          onChange={(e) => startTransition(() => setCompany(e.target.value))}
-        />
+        <input className="input text-sm py-2" placeholder="e.g. Google, Stripe" value={company} onChange={(e) => startTransition(() => setCompany(e.target.value))} />
       </div>
       <div className="space-y-1">
         <label className="block text-xs font-medium text-slate-600">Location</label>
-        <input
-          className="input text-sm py-2"
-          placeholder="e.g. New York, Austin"
-          value={location}
-          onChange={(e) => startTransition(() => setLocation(e.target.value))}
-        />
+        <input className="input text-sm py-2" placeholder="e.g. New York, Austin" value={location} onChange={(e) => startTransition(() => setLocation(e.target.value))} />
       </div>
       <label className="flex items-center gap-3 cursor-pointer">
         <div
@@ -160,10 +144,7 @@ function FilterPanel({
         </select>
       </div>
       {hasActiveFilters && (
-        <button
-          className="w-full text-xs font-medium text-slate-500 hover:text-slate-800 py-1 transition"
-          onClick={onClear}
-        >
+        <button className="w-full text-xs font-medium text-slate-500 hover:text-slate-800 py-1 transition" onClick={onClear}>
           Clear all filters
         </button>
       )}

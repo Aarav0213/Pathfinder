@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import { getProfile, updateProfile, type UserProfile } from "../api/profile";
 import { useAuth } from "../context/AuthContext";
 import api from "../api/client";
@@ -38,14 +38,14 @@ export default function ProfilePage() {
     setError("");
     try {
       const updated = await updateProfile({
-        resume_text: form.resume_text || undefined,
-        skills: form.skills || undefined,
-        target_roles: form.target_roles || undefined,
-        preferred_locations: form.preferred_locations || undefined,
-        graduation_year: form.graduation_year !== "" ? Number(form.graduation_year) : undefined,
+        resume_text: form.resume_text,
+        skills: form.skills,
+        target_roles: form.target_roles,
+        preferred_locations: form.preferred_locations,
+        graduation_year: form.graduation_year ? Number(form.graduation_year) : undefined,
       });
       setProfile(updated);
-      setMessage("Profile saved.");
+      setMessage("Profile saved successfully.");
     } catch {
       setError("Unable to save profile.");
     } finally {
@@ -88,11 +88,9 @@ export default function ProfilePage() {
             {profile?.is_premium ? <span className="ml-2 inline-block w-2 h-2 rounded-full bg-brand-500" title="Pro"></span> : null}
           </p>
         </div>
-
         <div className="card p-6 space-y-4">
           {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
           {message && <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</div>}
-
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Resume</label>
             <div className="flex gap-3 mb-2">
@@ -119,7 +117,6 @@ export default function ProfilePage() {
               onChange={(e) => setForm({ ...form, resume_text: e.target.value })}
             />
           </div>
-
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Skills</label>
             <input className="input" placeholder="e.g. Python, React, Machine Learning, SQL" value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} />
@@ -136,12 +133,10 @@ export default function ProfilePage() {
             <label className="block text-sm font-medium text-slate-700 mb-1">Graduation Year</label>
             <input className="input" type="number" placeholder="e.g. 2026" value={form.graduation_year} onChange={(e) => setForm({ ...form, graduation_year: e.target.value })} />
           </div>
-
           <button className="button-primary w-full disabled:opacity-60" disabled={saving} onClick={save}>
             {saving ? "Saving..." : "Save Profile"}
           </button>
         </div>
-
         {!profile?.is_premium && (
           <div className="card p-6 flex items-center justify-between gap-4">
             <div>
@@ -155,4 +150,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
