@@ -12,7 +12,8 @@ router = APIRouter(prefix="/saved", tags=["saved"])
 def get_saved(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     return db.query(SavedJob).filter(SavedJob.user_id == current_user.id).all()
 
-@router.post("/{job_id}", response_model=SavedJobResponse)
+# Removed response_model=SavedJobResponse here to prevent Pydantic 500 crash on missing Job relationship
+@router.post("/{job_id}")
 def save_job(job_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     job = db.get(Job, job_id)
     if not job:
@@ -20,15 +21,13 @@ def save_job(job_id: int, db: Session = Depends(get_db), current_user=Depends(ge
     
     existing = db.query(SavedJob).filter(SavedJob.user_id == current_user.id, SavedJob.job_id == job_id).first()
     if existing:
-        return existing
+        return {"id": existing.id, "job_id": existing.job_id, "user_id": existing.user_id}
         
     saved = SavedJob(user_id=current_user.id, job_id=job_id)
     db.add(saved)
     db.commit()
     
-    # Fully re-fetch the object so Pydantic serialization doesn't crash on the missing relationship
-    saved = db.query(SavedJob).filter(SavedJob.id == saved.id).first()
-    return saved
+    return {"id": saved.id, "job_id": saved.job_id, "user_id": saved.user_id}
 
 @router.delete("/{job_id}")
 def unsave_job(job_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
