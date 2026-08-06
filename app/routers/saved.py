@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+﻿from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.routers.auth import get_current_user
@@ -17,13 +17,17 @@ def save_job(job_id: int, db: Session = Depends(get_db), current_user=Depends(ge
     job = db.get(Job, job_id)
     if not job:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
+    
     existing = db.query(SavedJob).filter(SavedJob.user_id == current_user.id, SavedJob.job_id == job_id).first()
     if existing:
         return existing
+        
     saved = SavedJob(user_id=current_user.id, job_id=job_id)
     db.add(saved)
     db.commit()
-    db.refresh(saved)
+    
+    # Fully re-fetch the object so Pydantic serialization doesn't crash on the missing relationship
+    saved = db.query(SavedJob).filter(SavedJob.id == saved.id).first()
     return saved
 
 @router.delete("/{job_id}")

@@ -1,5 +1,5 @@
 ﻿import ContactFooter from "../components/ContactFooter";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { listJobs, type Job } from "../api/jobs";
 import { getRecommendations } from "../api/recommendations";
@@ -50,17 +50,6 @@ function JobCard({ job }: { job: Job }) {
             <span className="text-xs text-slate-400">
               Posted {new Date(job.posted_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
             </span>
-            {(job as any).source === "greenhouse" && (
-              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Greenhouse</span>
-            )}
-            {(job as any).source === "jsearch" && (
-              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">Live</span>
-            )}
-            {(job as any).apply_url && (
-              <a href={(job as any).apply_url} target="_blank" rel="noreferrer" className="text-xs font-medium text-brand-600 hover:underline">
-                Apply directly &rarr;
-              </a>
-            )}
           </div>
         </div>
       </div>
@@ -78,41 +67,30 @@ type FilterPanelProps = {
   dateRange: string; setDateRange: (v: string) => void;
   hasActiveFilters: boolean;
   onClear: () => void;
-  startTransition: (fn: () => void) => void;
 };
 
 function FilterPanel({
-  keyword, setKeyword,
-  company, setCompany,
-  location, setLocation,
-  remoteOnly, setRemoteOnly,
-  employmentType, setEmploymentType,
-  sort, setSort,
-  dateRange, setDateRange,
-  hasActiveFilters,
-  onClear,
-  startTransition,
+  keyword, setKeyword, company, setCompany, location, setLocation,
+  remoteOnly, setRemoteOnly, employmentType, setEmploymentType,
+  sort, setSort, dateRange, setDateRange, hasActiveFilters, onClear
 }: FilterPanelProps) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-5">
       <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Filters</div>
       <div className="space-y-1">
         <label className="block text-xs font-medium text-slate-600">Role / Skill</label>
-        <input className="input text-sm py-2" placeholder="e.g. react, ml, backend" value={keyword} onChange={(e) => startTransition(() => setKeyword(e.target.value))} />
+        <input className="input text-sm py-2" placeholder="e.g. react, ml, backend" value={keyword} onChange={(e) => setKeyword(e.target.value)} />
       </div>
       <div className="space-y-1">
         <label className="block text-xs font-medium text-slate-600">Company</label>
-        <input className="input text-sm py-2" placeholder="e.g. Google, Stripe" value={company} onChange={(e) => startTransition(() => setCompany(e.target.value))} />
+        <input className="input text-sm py-2" placeholder="e.g. Google, Stripe" value={company} onChange={(e) => setCompany(e.target.value)} />
       </div>
       <div className="space-y-1">
         <label className="block text-xs font-medium text-slate-600">Location</label>
-        <input className="input text-sm py-2" placeholder="e.g. New York, Austin" value={location} onChange={(e) => startTransition(() => setLocation(e.target.value))} />
+        <input className="input text-sm py-2" placeholder="e.g. New York, Austin" value={location} onChange={(e) => setLocation(e.target.value)} />
       </div>
       <label className="flex items-center gap-3 cursor-pointer">
-        <div
-          className={"relative w-10 h-6 rounded-full transition-colors " + (remoteOnly ? "bg-brand-600" : "bg-slate-200")}
-          onClick={() => setRemoteOnly(!remoteOnly)}
-        >
+        <div className={"relative w-10 h-6 rounded-full transition-colors " + (remoteOnly ? "bg-brand-600" : "bg-slate-200")} onClick={() => setRemoteOnly(!remoteOnly)}>
           <div className={"absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform " + (remoteOnly ? "translate-x-4" : "")} />
         </div>
         <span className="text-sm font-medium text-slate-700">Remote only</span>
@@ -166,9 +144,7 @@ export default function JobsPage() {
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [sparse, setSparse] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [, startTransition] = useTransition();
 
   const debouncedKeyword = useDebouncedValue(keyword, 350);
   const debouncedCompany = useDebouncedValue(company, 350);
@@ -185,7 +161,6 @@ export default function JobsPage() {
 
   useEffect(() => {
     setPage(0);
-    setSparse(false);
   }, [debouncedKeyword, debouncedCompany, debouncedLocation, sort, dateRange, remoteOnly, employmentType]);
 
   useEffect(() => {
@@ -198,108 +173,38 @@ export default function JobsPage() {
     if (dateRange) params.date_range = dateRange;
     if (remoteOnly) params.remote_only = true;
     if (employmentType) params.employment_type = employmentType;
+    
     listJobs(params)
       .then((data) => {
         setJobs(data);
         setError("");
-        const hasSearch = debouncedKeyword || debouncedCompany || debouncedLocation;
-        setSparse(!!hasSearch && data.length > 0 && data.length < PAGE_SIZE);
       })
       .catch((err) => { if (err.name !== "CanceledError") setError("Unable to load jobs right now."); })
       .finally(() => setLoading(false));
     return () => controller.abort();
-  }, [debouncedKeyword, debouncedCompany, debouncedLocation, sort, dateRange, remoteOnly, page]);
+  }, [debouncedKeyword, debouncedCompany, debouncedLocation, sort, dateRange, remoteOnly, employmentType, page]);
 
   const hasActiveFilters = !!(keyword || company || location || dateRange || remoteOnly || employmentType);
-
-  const filterProps: FilterPanelProps = {
-    keyword, setKeyword,
-    company, setCompany,
-    location, setLocation,
-    remoteOnly, setRemoteOnly,
-    employmentType, setEmploymentType,
-    sort, setSort,
-    dateRange, setDateRange,
-    hasActiveFilters,
-    onClear: handleClear,
-    startTransition,
-  };
 
   return (
     <div className="page-shell">
       <div className="mx-auto max-w-7xl px-4 py-8 pb-12 sm:px-6 lg:px-8">
-        <div className="mb-8 rounded-3xl bg-slate-900 px-8 py-12 text-white">
-          <div className="max-w-2xl">
-            <h1 className="text-4xl font-bold tracking-tight leading-tight">Find your next internship</h1>
-            <p className="mt-3 text-base text-slate-400 max-w-lg">Search thousands of real listings from top companies. Filter, sort, and apply in minutes.</p>
-          </div>
-        </div>
-        {user && recommendations.length > 0 && !hasActiveFilters && (
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-semibold text-slate-800">Recommended for you</h2>
-              <span className="text-xs text-slate-400">Based on your activity</span>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {recommendations.slice(0, 3).map((job) => (
-                <div key={job.id} className="rounded-2xl border border-brand-200 bg-brand-50 p-4 hover:shadow-md transition-all">
-                  <div className="flex gap-3 items-start">
-                    <CompanyAvatar name={job.company} />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-semibold text-slate-900 leading-snug line-clamp-2">{job.title}</div>
-                      <div className="text-xs text-slate-500 mt-0.5">{job.company} &middot; {job.location}</div>
-                      <Link className="mt-2 inline-block text-xs font-medium text-brand-600 hover:underline" to={"/jobs/" + job.id}>View details &rarr;</Link>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
         <div className="flex gap-6 items-start">
           <aside className="hidden lg:block w-56 shrink-0">
-            <FilterPanel {...filterProps} />
+            <FilterPanel keyword={keyword} setKeyword={setKeyword} company={company} setCompany={setCompany} location={location} setLocation={setLocation} remoteOnly={remoteOnly} setRemoteOnly={setRemoteOnly} employmentType={employmentType} setEmploymentType={setEmploymentType} sort={sort} setSort={setSort} dateRange={dateRange} setDateRange={setDateRange} hasActiveFilters={hasActiveFilters} onClear={handleClear} />
           </aside>
           <div className="flex-1 min-w-0 space-y-3">
-            <div className="lg:hidden">
-              <button
-                className="w-full flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 shadow-sm"
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                <span className="flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
-                  </svg>
-                  Filters {hasActiveFilters ? "(" + [keyword, company, location, remoteOnly ? "remote" : "", dateRange].filter(Boolean).length + " active)" : ""}
-                </span>
-                <svg xmlns="http://www.w3.org/2000/svg" className={"h-4 w-4 text-slate-400 transition-transform " + (showFilters ? "rotate-180" : "")} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              {showFilters && (
-                <div className="mt-2">
-                  <FilterPanel {...filterProps} />
-                </div>
-              )}
-            </div>
-            {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
-            {sparse && (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                Limited results found. We have logged your search and will pull more listings overnight.
-              </div>
-            )}
             {loading ? <JobListSkeleton /> : jobs.length === 0 ? (
               <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-sm">
                 <div className="text-slate-700 font-medium">No results found</div>
-                <div className="text-sm text-slate-400 mt-1">We have logged your search and will pull matching listings overnight.</div>
               </div>
             ) : (
               jobs.map((job) => <JobCard key={job.id} job={job} />)
             )}
             <div className="flex items-center justify-center gap-3 pt-2">
-              <button className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition" disabled={page === 0 || loading} onClick={() => setPage((p) => Math.max(0, p - 1))}>Previous</button>
+              <button className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm disabled:opacity-40" disabled={page === 0 || loading} onClick={() => setPage((p) => Math.max(0, p - 1))}>Previous</button>
               <span className="text-sm text-slate-500 font-medium">Page {page + 1}</span>
-              <button className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition" disabled={jobs.length < PAGE_SIZE || loading} onClick={() => setPage((p) => p + 1)}>Next</button>
+              <button className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm disabled:opacity-40" disabled={jobs.length < PAGE_SIZE || loading} onClick={() => setPage((p) => p + 1)}>Next</button>
             </div>
           </div>
         </div>
