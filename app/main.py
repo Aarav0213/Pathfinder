@@ -102,3 +102,35 @@ def recover_admin(request: _Request, payload: dict, db: _Session = _Depends(_get
     db.commit()
 
     return {"ok": True, "email": user.email, "role": user.role}
+
+# Temporary protected admin recovery endpoint v2
+from fastapi import Depends as _RecoveryDepends, Request as _RecoveryRequest, HTTPException as _RecoveryHTTPException
+from sqlalchemy.orm import Session as _RecoverySession
+from app.database import get_db as _recovery_get_db
+from app.models.user import User as _RecoveryUser
+import os as _recovery_os
+
+@app.post("/admin/recover-admin-v2")
+def recover_admin_v2(
+    request: _RecoveryRequest,
+    payload: dict,
+    db: _RecoverySession = _RecoveryDepends(_recovery_get_db),
+):
+    expected = _recovery_os.getenv("ADMIN_SECRET")
+    provided = request.headers.get("X-Admin-Secret")
+
+    if not expected or not provided or provided != expected:
+        raise _RecoveryHTTPException(status_code=403, detail="Forbidden")
+
+    email = payload.get("email")
+    if not email:
+        raise _RecoveryHTTPException(status_code=400, detail="email is required")
+
+    user = db.query(_RecoveryUser).filter(_RecoveryUser.email == email).first()
+    if not user:
+        raise _RecoveryHTTPException(status_code=404, detail="User not found")
+
+    user.role = "admin"
+    db.commit()
+
+    return {"ok": True, "email": user.email, "role": user.role}
