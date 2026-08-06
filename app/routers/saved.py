@@ -1,5 +1,5 @@
 ﻿from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
 from app.routers.auth import get_current_user
 from app.schemas import SavedJobResponse
@@ -10,9 +10,9 @@ router = APIRouter(prefix="/saved", tags=["saved"])
 
 @router.get("", response_model=list[SavedJobResponse])
 def get_saved(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
-    return db.query(SavedJob).filter(SavedJob.user_id == current_user.id).all()
+    # joinedload("job") forces SQLAlchemy to load the Job data, preventing Pydantic from crashing
+    return db.query(SavedJob).options(joinedload(SavedJob.job)).filter(SavedJob.user_id == current_user.id).all()
 
-# Removed response_model=SavedJobResponse here to prevent Pydantic 500 crash on missing Job relationship
 @router.post("/{job_id}")
 def save_job(job_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     job = db.get(Job, job_id)
